@@ -14,6 +14,20 @@ Este proyecto se está desarrollando de forma **incremental**, paso por paso, pr
 
 Ver el plan completo en: [PLAN_INCREMENTAL.md](PLAN_INCREMENTAL.md)
 
+## 📦 Código Fuente
+
+**Repositorio en GitHub**: [https://github.com/HectorCorbellini/AlexiaJava](https://github.com/HectorCorbellini/AlexiaJava)
+
+```bash
+# Clonar el proyecto
+git clone https://github.com/HectorCorbellini/AlexiaJava.git
+cd AlexiaJava
+
+# Compilar y ejecutar
+mvn clean compile
+mvn spring-boot:run
+```
+
 ## 📋 Requisitos
 
 - Java 17 o superior

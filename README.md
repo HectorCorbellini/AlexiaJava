@@ -201,17 +201,58 @@ javaDos-/
 
 ## 🔧 Comandos Útiles
 
+### Ejecutar la Aplicación
+
 ```bash
-# Compilar
+# Linux/Mac: Usar el script (recomendado)
+# Detiene instancias previas automáticamente y lanza la aplicación
+./scripts/run_linux.sh
+
+# Windows: Usar el script batch
+scripts\run_windows.bat
+
+# Cualquier OS: Maven directo
+mvn spring-boot:run
+```
+
+### Compilar
+
+```bash
+# Compilar sin ejecutar
 mvn clean compile
 
-# Ejecutar aplicación
-mvn spring-boot:run
+# Compilar y empaquetar
+mvn clean package
+```
 
-# Ver logs del bot de Telegram
+### Logs y Debugging
+
+```bash
+# Linux/Mac: Ver logs del bot de Telegram
 tail -f /proc/$(pgrep -f "spring-boot:run")/fd/1 | grep -i telegram
 
-# Eliminar webhook si es necesario
+# Linux/Mac: Ver todos los logs en tiempo real
+tail -f /proc/$(pgrep -f "spring-boot:run")/fd/1
+
+# Windows: Los logs aparecen directamente en la consola
+```
+
+### Detener la Aplicación
+
+```bash
+# Linux/Mac: Detener todas las instancias
+pkill -f "spring-boot:run"
+
+# Linux/Mac: Forzar detención si no responde
+pkill -9 -f "spring-boot:run"
+
+# Windows: Presionar Ctrl+C en la consola o cerrar la ventana
+```
+
+### Utilidades de Telegram
+
+```bash
+# Eliminar webhook si es necesario (Linux/Mac)
 ./scripts/delete_webhook.sh
 ```
 
@@ -256,6 +297,88 @@ curl http://localhost:8080
 # Verificar logs del bot
 tail -f /proc/$(pgrep -f "spring-boot:run")/fd/1 | grep -i "telegram\|bot"
 ```
+
+## 🔐 Manejo del Archivo .env
+
+### ⚠️ IMPORTANTE: Seguridad del .env
+
+El archivo `.env` contiene **credenciales sensibles** (API keys, passwords) que **NO deben subirse a GitHub**.
+
+### 📝 Workflow Recomendado
+
+#### **Durante el Desarrollo Local**:
+```bash
+# 1. Comentarizar .env en .gitignore para poder modificarlo
+# Editar .gitignore y cambiar:
+.env
+# por:
+#.env
+
+# 2. Ahora puedes editar .env con tus credenciales reales
+nano .env
+
+# 3. Ejecutar la aplicación normalmente
+mvn spring-boot:run
+```
+
+#### **Antes de Subir a GitHub**:
+```bash
+# 1. Descomentarizar .env en .gitignore
+# Editar .gitignore y cambiar:
+#.env
+# por:
+.env
+
+# 2. Verificar que .env no esté en staging
+git status
+# No debe aparecer .env en la lista
+
+# 3. Hacer commit y push
+git add .
+git commit -m "Tu mensaje"
+git push origin main
+```
+
+### 🛡️ Protección Automática de GitHub
+
+GitHub tiene **push protection** que bloquea automáticamente commits con:
+- API keys (Groq, OpenAI, etc.)
+- Tokens de acceso
+- Passwords
+- Claves privadas
+
+Si ves este error:
+```
+remote: error: GH013: Repository rule violations found
+remote: - Push cannot contain secrets
+```
+
+**Solución**:
+```bash
+# Remover .env del commit
+git rm --cached .env
+
+# Asegurarse que .env esté en .gitignore
+echo ".env" >> .gitignore
+
+# Hacer nuevo commit
+git add .gitignore
+git commit --amend -m "Tu mensaje (sin .env)"
+git push origin main
+```
+
+### 📋 Archivo .env.example
+
+El repositorio incluye `.env.example` con valores de ejemplo:
+```bash
+# Copiar para crear tu .env local
+cp .env.example .env
+
+# Editar con tus credenciales reales
+nano .env
+```
+
+**Nunca** pongas credenciales reales en `.env.example` - este archivo SÍ se sube a GitHub.
 
 ## 📊 Progreso del Desarrollo
 

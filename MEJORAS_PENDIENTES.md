@@ -6,7 +6,7 @@ Este documento registra las mejoras de arquitectura y código limpio que aún no
 
 ## ✅ Mejoras Implementadas (2025-10-15)
 
-### 🔴 Prioridad Alta - COMPLETADAS
+### 🔴 Prioridad Alta - COMPLETADAS (3/3)
 
 #### 1. **Interfaces para Servicios** ✅
 **Estado**: Implementado
@@ -59,6 +59,64 @@ Este documento registra las mejoras de arquitectura y código limpio que aún no
 
 ---
 
+## ✅ Mejoras Implementadas (2025-10-15) - Sesión 2
+
+### 🟡 Prioridad Media - COMPLETADAS (3/3)
+
+#### 4. **Factory para Entidades** ✅
+**Estado**: Implementado
+**Archivos creados**:
+- `src/main/java/com/alexia/factory/ConnectionTestFactory.java`
+- `src/main/java/com/alexia/factory/TelegramMessageFactory.java`
+
+**Archivos modificados**:
+- `DatabaseService.java` - Usa `ConnectionTestFactory`
+- `TelegramService.java` - Usa `TelegramMessageFactory`
+
+**Beneficios**:
+- ✅ Separación de lógica de creación de entidades
+- ✅ Código más testeable y mantenible
+- ✅ Centralización de lógica de conversión DTO ↔ Entity
+- ✅ Facilita cambios futuros en la creación de objetos
+
+---
+
+#### 5. **Validación de Entrada** ✅
+**Estado**: Implementado
+**Archivos modificados**:
+- `pom.xml` - Agregada dependencia `spring-boot-starter-validation`
+- `ConnectionTest.java` - Validaciones: `@NotBlank`, `@Size`, `@PastOrPresent`
+- `TelegramMessage.java` - Validaciones: `@NotNull`, `@Size`, `@PastOrPresent`
+
+**Beneficios**:
+- ✅ Protección contra datos inválidos
+- ✅ Mensajes de error descriptivos
+- ✅ Validación automática antes de persistir
+- ✅ Cumple con estándares de Bean Validation (JSR 380)
+
+---
+
+#### 6. **Manejo de Excepciones Personalizado** ✅
+**Estado**: Implementado
+**Archivos creados**:
+- `src/main/java/com/alexia/exception/DatabaseConnectionException.java`
+- `src/main/java/com/alexia/exception/TelegramException.java`
+- `src/main/java/com/alexia/exception/GlobalExceptionHandler.java`
+- `src/main/java/com/alexia/dto/ErrorResponse.java`
+
+**Archivos modificados**:
+- `DatabaseService.java` - Lanza `DatabaseConnectionException`
+- `TelegramService.java` - Lanza `TelegramException`
+
+**Beneficios**:
+- ✅ Excepciones específicas por dominio
+- ✅ Manejo centralizado con `@ControllerAdvice`
+- ✅ Respuestas de error estandarizadas
+- ✅ Mejor debugging y trazabilidad
+- ✅ Logs específicos por tipo de error
+
+---
+
 ## ✅ Mejoras Implementadas Anteriores (2025-10-14)
 
 ### 1. **Capa de DTOs** ✅
@@ -82,7 +140,7 @@ Este documento registra las mejoras de arquitectura y código limpio que aún no
 
 ## ❌ Mejoras Aún Pendientes
 
-### 🟡 Prioridad Media (3 mejoras pendientes)
+### 🟢 Prioridad Baja (4 mejoras pendientes)
 
 #### 4. **Factory para Entidades**
 **Problema**: Constructor con lógica en `ConnectionTest`.
@@ -311,23 +369,23 @@ logging.level.com.alexia=INFO
 | Prioridad | Implementadas | Pendientes | Progreso |
 |-----------|---------------|------------|----------|
 | 🔴 Alta | **3** | 0 | **100%** ✅ |
-| 🟡 Media | 0 | 3 | 0% |
+| 🟡 Media | **3** | 0 | **100%** ✅ |
 | 🟢 Baja | 0 | 4 | 0% |
-| **TOTAL** | **7** | **7** | **50% completado** |
+| **TOTAL** | **10** | **4** | **71% completado** |
 
-### Mejoras Implementadas (7):
+### Mejoras Implementadas (10):
 1. ✅ Capa de DTOs (ConnectionResultDTO, TelegramMessageDTO)
 2. ✅ Capa de Use Cases (TestConnectionUseCase)
 3. ✅ Constantes Centralizadas (Messages, UIConstants)
 4. ✅ Arquitectura para Telegram (TelegramService, TelegramBotConfig)
 5. ✅ Interfaces para Servicios (IDatabaseService, ITelegramService)
 6. ✅ Componentes UI Reutilizables (MetricCard, StatusBadge, SystemStatusPanel)
-7. ✅ Configuración Externalizada (EnvironmentConfig)
+7. ✅ Configuración Externalizada (loadEnvironmentVariables)
+8. ✅ Factory para Entidades (ConnectionTestFactory, TelegramMessageFactory)
+9. ✅ Validación de Entrada (Bean Validation en entidades)
+10. ✅ Manejo de Excepciones Personalizado (DatabaseConnectionException, TelegramException, GlobalExceptionHandler)
 
-### Mejoras Pendientes (7):
-- 🟡 Factory para Entidades
-- 🟡 Validación de Entrada
-- 🟡 Manejo de Excepciones Personalizado
+### Mejoras Pendientes (4):
 - 🟢 Logging Estructurado
 - 🟢 Tests Unitarios
 - 🟢 Documentación JavaDoc
@@ -339,11 +397,17 @@ logging.level.com.alexia=INFO
 
 ### Para el Paso 4 (Dashboard con Logs):
 1. ✅ **Componentes UI Reutilizables** - COMPLETADO
-2. ⏳ **Validación de Entrada** - Proteger contra datos inválidos
+2. ✅ **Validación de Entrada** - COMPLETADO
 
 ### Para el Paso 5 (Comandos del Bot):
 1. ✅ **Interfaces para Servicios** - COMPLETADO
-2. ⏳ **Manejo de Excepciones** - Excepciones específicas de Telegram
+2. ✅ **Manejo de Excepciones** - COMPLETADO
+
+### Mejoras Opcionales (Prioridad Baja):
+1. ⏳ **Tests Unitarios** - Cobertura de código con JUnit y Mockito
+2. ⏳ **Logging Estructurado** - Mejor formato de logs
+3. ⏳ **Documentación JavaDoc** - Comentarios completos
+4. ⏳ **Configuración de Profiles** - Entornos dev/test/prod
 
 ---
 

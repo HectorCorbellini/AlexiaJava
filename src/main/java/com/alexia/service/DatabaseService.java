@@ -12,13 +12,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Servicio para operaciones de base de datos.
+ * Implementación del servicio para operaciones de base de datos.
  * Maneja la lógica de negocio relacionada con la persistencia.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class DatabaseService {
+public class DatabaseService implements IDatabaseService {
 
     private final ConnectionTestRepository connectionTestRepository;
 
@@ -27,6 +27,7 @@ public class DatabaseService {
      * 
      * @return ConnectionResultDTO con el resultado de la operación
      */
+    @Override
     public ConnectionResultDTO testConnection() {
         try {
             // Crear un registro de prueba

@@ -13,13 +13,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Servicio para gestionar mensajes de Telegram.
+ * Implementación del servicio para gestionar mensajes de Telegram.
  * Maneja la lógica de negocio relacionada con la persistencia de mensajes.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TelegramService {
+public class TelegramService implements ITelegramService {
 
     private final TelegramMessageRepository telegramMessageRepository;
 
@@ -29,6 +29,7 @@ public class TelegramService {
      * @param dto DTO con la información del mensaje
      * @return El mensaje guardado
      */
+    @Override
     @Transactional
     public TelegramMessage saveMessage(TelegramMessageDTO dto) {
         try {
@@ -60,6 +61,7 @@ public class TelegramService {
      * @param chatId ID del chat
      * @return Lista de mensajes
      */
+    @Override
     public List<TelegramMessageDTO> getMessagesByChatId(Long chatId) {
         return telegramMessageRepository.findByChatIdOrderByCreatedAtDesc(chatId)
                 .stream()
@@ -72,6 +74,7 @@ public class TelegramService {
      *
      * @return Lista de todos los mensajes
      */
+    @Override
     public List<TelegramMessageDTO> getAllMessages() {
         return telegramMessageRepository.findAll()
                 .stream()
@@ -84,6 +87,7 @@ public class TelegramService {
      *
      * @return Número total de mensajes
      */
+    @Override
     public long getTotalMessageCount() {
         return telegramMessageRepository.count();
     }

@@ -2,11 +2,11 @@
 
 Asistente automatizado que ayuda a usuarios de WhatsApp y Telegram a encontrar negocios, productos y servicios locales usando IA y fuentes verificadas.
 
-## 🚀 Estado Actual: PASO 5 COMPLETADO ✅ - Comandos Básicos del Bot
+## 🚀 Estado Actual: PASO 6 COMPLETADO ✅ - Integración con Grok AI
 
 Este proyecto se está desarrollando de forma **incremental**, paso por paso, probando cada funcionalidad antes de continuar.
 
-✅ **5 pasos completados de 10** (50% progreso)
+✅ **6 pasos completados de 10** (60% progreso)
 
 Ver el plan completo en: [PLAN_INCREMENTAL.md](PLAN_INCREMENTAL.md)
 
@@ -14,10 +14,20 @@ Ver el plan completo en: [PLAN_INCREMENTAL.md](PLAN_INCREMENTAL.md)
 
 **Repositorio en GitHub**: [https://github.com/HectorCorbellini/AlexiaJava](https://github.com/HectorCorbellini/AlexiaJava)
 
+**Rama actual (Paso 6)**: `paso6-grok-ai-final`
+
 ```bash
-# Clonar el proyecto
+# Clonar el proyecto (rama principal)
 git clone https://github.com/HectorCorbellini/AlexiaJava.git
 cd AlexiaJava
+
+# O clonar la rama del Paso 6 directamente
+git clone -b paso6-grok-ai-final https://github.com/HectorCorbellini/AlexiaJava.git
+cd AlexiaJava
+
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus credenciales (Supabase, Telegram, Groq)
 
 # Compilar y ejecutar
 mvn clean compile
@@ -745,13 +755,13 @@ mvn clean install -DskipTests
 | 3 | ✅ | 2025-10-14 | Bot de Telegram funcional con eco |
 | 4 | ✅ | 2025-10-16 | Dashboard con logs de Telegram |
 | 5 | ✅ | 2025-10-16 | Comandos básicos del bot (/start, /help, /status) |
-| 6 | ⏳ | Próximo | Integración con Grok AI |
+| 6 | ✅ | 2025-10-16 | Integración con Grok AI (llama-3.1-8b-instant) |
 | 7 | ⏳ | Próximo | Dashboard de conversaciones IA |
 | 8 | ⏳ | Próximo | Integración con OpenAI (opcional) |
 | 9 | ⏳ | Próximo | Búsqueda por categoría |
 | 10 | ⏳ | Próximo | Dashboard con métricas |
 
-**Progreso actual**: 5/10 pasos = **50% completado**
+**Progreso actual**: 6/10 pasos = **60% completado**
 
 ## 📄 Licencia
 
@@ -761,5 +771,6 @@ Este proyecto es privado y está en desarrollo activo.
 
 **Versión**: 1.0.0  
 **Última actualización**: 2025-10-16  
-**Estado**: Paso 5 completado - Comandos Básicos del Bot funcionando  
-**Próximo paso**: Paso 6 - Integración con Grok AI
+**Estado**: Paso 6 completado - Bot con Inteligencia Artificial (Grok AI)  
+**Rama actual**: `paso6-grok-ai-final`  
+**Próximo paso**: Paso 7 - Dashboard de Conversaciones IA

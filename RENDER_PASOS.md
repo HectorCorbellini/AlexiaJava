@@ -9,9 +9,10 @@
 
 ## ✅ Preparación Completada
 
+- [x] **Dockerfile** creado para despliegue con Docker
+- [x] **render.yaml** configurado para usar Docker
 - [x] **application-prod.properties** creado con configuración de Render
 - [x] **pom.xml** actualizado con mainClass
-- [x] **render.yaml** creado con configuración de despliegue
 - [x] **.renderignore** creado para excluir archivos innecesarios
 - [x] **RENDER_ENV_VARS.md** creado con documentación de variables de entorno
 - [x] **Webhook de Telegram** - Eliminación automática integrada en el código
@@ -66,29 +67,16 @@ Asegúrate de que el `pom.xml` incluya el plugin de Spring Boot Maven:
 </build>
 ```
 
-### 2. Crear `render.yaml`
+### 2. Configuración con Docker
 
-Crea un archivo `render.yaml` en la raíz del proyecto:
+**✅ Ya está configurado**
 
-```yaml
-# render.yaml
-services:
-  - type: web
-    name: alexia
-    env: java
-    region: oregon  # o la región más cercana a ti
-    plan: free  # o 'starter' para producción
-    buildCommand: mvn clean package -DskipTests
-    startCommand: java -jar target/*.jar
-    envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: prod
-      - key: PORT
-        value: 8080
-      # Agrega otras variables de entorno aquí
-    healthCheckPath: /actuator/health
-    autoDeploy: true
-```
+El proyecto incluye:
+- **Dockerfile**: Imagen optimizada con Java 17
+- **render.yaml**: Configurado para usar Docker
+- **Multi-stage build**: Reduce el tamaño de la imagen final
+
+Render detectará automáticamente el Dockerfile y construirá la imagen.
 
 ### 3. Configuración de Telegram
 
@@ -104,11 +92,11 @@ La aplicación elimina automáticamente cualquier webhook de Telegram al iniciar
 4. Configura el servicio:
    - **Name**: alexia (o el nombre que prefieras)
    - **Region**: Elige la más cercana a tus usuarios
-   - **Branch**: main (o la rama que uses)
-   - **Runtime**: Java
-   - **Build Command**: `mvn clean package -DskipTests`
-   - **Start Command**: `java -jar target/*.jar`
+   - **Branch**: paso6-grok-ai-final (o main si ya mergeaste)
+   - **Environment**: Docker (Render lo detectará automáticamente)
    - **Instance Type**: Free (para empezar)
+   
+   ⚠️ **Importante**: Render detectará el `Dockerfile` y `render.yaml` automáticamente
 
 5. **Variables de Entorno**:
    ```
@@ -208,6 +196,7 @@ Los siguientes archivos fueron creados para el despliegue:
 
 | Archivo | Descripción |
 |---------|-------------|
+| `Dockerfile` | Imagen Docker optimizada con Java 17 |
 | `render.yaml` | Configuración de despliegue de Render |
 | `.renderignore` | Archivos a excluir del despliegue |
 | `application-prod.properties` | Configuración de producción |

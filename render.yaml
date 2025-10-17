@@ -4,13 +4,12 @@
 services:
   - type: web
     name: alexia
-    runtime: java
+    env: docker  # Usar Docker para compatibilidad con Java
     region: oregon  # Cambia a la región más cercana (oregon, frankfurt, singapore, etc.)
     plan: free  # Opciones: free, starter, standard, pro
     
-    # Comandos de construcción y ejecución
-    buildCommand: mvn clean package -DskipTests
-    startCommand: java -Dserver.port=$PORT -Dspring.profiles.active=prod -jar target/*.jar
+    # Docker detectará automáticamente el Dockerfile
+    # No se necesitan buildCommand ni startCommand
     
     # Configuración de salud y auto-despliegue
     healthCheckPath: /actuator/health

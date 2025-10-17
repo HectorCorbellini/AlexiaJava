@@ -47,6 +47,13 @@ public class BotManagerService {
                 log.info("✅ Bot registrado en la API de Telegram");
             }
             
+            // Eliminar webhook si existe (necesario para usar long polling)
+            log.info("🔧 Verificando y eliminando webhook si existe...");
+            boolean webhookDeleted = alexiaTelegramBot.deleteWebhook();
+            if (!webhookDeleted) {
+                log.warn("⚠️ No se pudo eliminar el webhook, pero continuando con el inicio");
+            }
+            
             // Activar el bot para que procese mensajes
             alexiaTelegramBot.setActive(true);
             

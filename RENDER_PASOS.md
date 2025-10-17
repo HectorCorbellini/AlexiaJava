@@ -14,7 +14,10 @@
 - [x] **render.yaml** creado con configuración de despliegue
 - [x] **.renderignore** creado para excluir archivos innecesarios
 - [x] **RENDER_ENV_VARS.md** creado con documentación de variables de entorno
+- [x] **Webhook de Telegram** - Eliminación automática integrada en el código
+- [x] **Scripts eliminados** - Ya no se requieren scripts bash para iniciar
 - [x] **Compilación verificada** - JAR generado exitosamente
+- [x] **Prueba local exitosa** - Aplicación funciona sin scripts
 
 ## 🚀 Pasos para el Despliegue
 
@@ -87,13 +90,11 @@ services:
     autoDeploy: true
 ```
 
-### 3. Configurar Webhook de Telegram (Opcional)
+### 3. Configuración de Telegram
 
-Si usas webhooks, configura el endpoint de Telegram después de desplegar:
+**✅ No se requiere configuración adicional**
 
-```bash
-curl -X GET "https://api.telegram.org/bot<TU_TOKEN>/setWebhook?url=<URL_RENDER>/webhook"
-```
+La aplicación elimina automáticamente cualquier webhook de Telegram al iniciar el bot, permitiendo el uso de long polling. Esto está integrado en el código Java, por lo que **no necesitas ejecutar scripts bash** ni configurar webhooks manualmente.
 
 ### 4. Desplegar en Render
 

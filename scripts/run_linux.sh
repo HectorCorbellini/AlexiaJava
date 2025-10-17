@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # Script para ejecutar la aplicación Alexia
-# Detiene cualquier instancia previa, elimina webhook de Telegram y lanza una nueva
+# Detiene cualquier instancia previa y lanza una nueva
+# 
+# NOTA: El webhook de Telegram se elimina automáticamente en el código Java
+#       al iniciar el bot, por lo que ya no es necesario hacerlo aquí.
 
 echo "🔍 Buscando instancias previas de la aplicación..."
 
@@ -27,28 +30,11 @@ if [ -n "$REMAINING" ]; then
 fi
 
 echo ""
-echo "🔧 Eliminando webhook de Telegram (si existe)..."
-
-# Cargar variables de entorno
-if [ -f .env ]; then
-    export $(cat .env | grep -v '^#' | xargs)
-fi
-
-# Eliminar webhook de Telegram
-if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
-    RESPONSE=$(curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/deleteWebhook")
-    if echo "$RESPONSE" | grep -q '"ok":true'; then
-        echo "✓ Webhook eliminado correctamente"
-    else
-        echo "⚠️  No se pudo eliminar el webhook (puede que no exista)"
-    fi
-else
-    echo "⚠️  TELEGRAM_BOT_TOKEN no encontrado en .env"
-fi
-
-echo ""
 echo "🚀 Iniciando aplicación Alexia..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "ℹ️  El webhook de Telegram se eliminará automáticamente al iniciar el bot"
+echo "   desde la interfaz web (Dashboard → Telegram → Iniciar Bot)"
 echo ""
 
 # Ejecutar la aplicación

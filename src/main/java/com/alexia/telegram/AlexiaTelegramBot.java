@@ -4,12 +4,17 @@ import com.alexia.constants.BotCommands;
 import com.alexia.constants.Messages;
 import com.alexia.dto.TelegramMessageDTO;
 import com.alexia.entity.BotCommand;
+import com.alexia.entity.Business;
 import com.alexia.repository.BotCommandRepository;
 import com.alexia.repository.TelegramMessageRepository;
+import com.alexia.service.BusinessService;
 import com.alexia.service.GrokService;
 import com.alexia.service.TelegramService;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.updates.DeleteWebhook;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -17,6 +22,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * Bot de Telegram para Alexia.
@@ -28,20 +34,30 @@ public class AlexiaTelegramBot extends TelegramLongPollingBot {
     private final BotCommandRepository botCommandRepository;
     private final TelegramMessageRepository telegramMessageRepository;
     private final GrokService grokService;
+    private final BusinessService businessService;
     private final String botUsername;
+    
+    /**
+     * Estado del bot: true = activo (procesa mensajes), false = inactivo (ignora mensajes)
+     */
+    @Getter
+    @Setter
+    private volatile boolean active = false;
 
     public AlexiaTelegramBot(String botToken, String botUsername, 
                             TelegramService telegramService,
                             BotCommandRepository botCommandRepository,
                             TelegramMessageRepository telegramMessageRepository,
-                            GrokService grokService) {
+                            GrokService grokService,
+                            BusinessService businessService) {
         super(botToken);
         this.botUsername = botUsername;
         this.telegramService = telegramService;
         this.botCommandRepository = botCommandRepository;
         this.telegramMessageRepository = telegramMessageRepository;
         this.grokService = grokService;
-        log.info("Bot de Telegram inicializado con Grok AI - username=@{}", botUsername);
+        this.businessService = businessService;
+        log.info("Bot de Telegram inicializado con Grok AI y búsqueda de negocios - username=@{}", botUsername);
     }
 
     @Override
@@ -51,6 +67,13 @@ public class AlexiaTelegramBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
+        // Si el bot está inactivo, no procesar mensajes
+        if (!active) {
+            log.trace("Bot inactivo, ignorando actualización - chatId={}", 
+                    update.hasMessage() ? update.getMessage().getChatId() : "N/A");
+            return;
+        }
+        
         if (update.hasMessage() && update.getMessage().hasText()) {
             processTextMessage(update);
         }
@@ -73,6 +96,9 @@ public class AlexiaTelegramBot extends TelegramLongPollingBot {
         // Verificar si es un comando
         if (messageText.startsWith("/")) {
             response = handleCommand(chatId, user, messageText);
+        } else if (messageText.toLowerCase().startsWith("buscar ")) {
+            // Búsqueda de negocios
+            response = handleBusinessSearch(messageText);
         } else {
             // Generar respuesta con Grok AI para mensajes normales
             response = generateGrokResponse(chatId, messageText);
@@ -186,6 +212,28 @@ public class AlexiaTelegramBot extends TelegramLongPollingBot {
     }
 
     /**
+     * Maneja la búsqueda de negocios por categoría.
+     */
+    private String handleBusinessSearch(String messageText) {
+        // Extraer la categoría del mensaje "buscar [categoría]"
+        String category = messageText.substring(7).trim(); // Remover "buscar "
+        
+        if (category.isEmpty()) {
+            return "❌ Por favor especifica una categoría.\n\nEjemplo: buscar panadería";
+        }
+        
+        log.info("Búsqueda de negocios - category={}", category);
+        
+        try {
+            List<Business> businesses = businessService.searchByCategory(category);
+            return businessService.formatBusinessListForTelegram(businesses, category);
+        } catch (Exception e) {
+            log.error("Error al buscar negocios - category={}, error={}", category, e.getMessage());
+            return "❌ Error al buscar negocios. Por favor intenta nuevamente.";
+        }
+    }
+
+    /**
      * Envía un mensaje de texto al usuario.
      */
     private void sendTextMessage(Long chatId, String text) {
@@ -199,6 +247,32 @@ public class AlexiaTelegramBot extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             log.error("Error al enviar mensaje - chatId={}, exception={}, message={}", 
                     chatId, e.getClass().getSimpleName(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Elimina el webhook de Telegram si existe.
+     * Esto es necesario para usar long polling en lugar de webhooks.
+     * 
+     * @return true si se eliminó correctamente o no existía, false si hubo error
+     */
+    public boolean deleteWebhook() {
+        try {
+            log.info("Eliminando webhook de Telegram...");
+            DeleteWebhook deleteWebhook = new DeleteWebhook();
+            Boolean result = execute(deleteWebhook);
+            
+            if (Boolean.TRUE.equals(result)) {
+                log.info("✓ Webhook eliminado correctamente");
+                return true;
+            } else {
+                log.warn("⚠ No se pudo eliminar el webhook (puede que no exista)");
+                return true; // No es un error crítico
+            }
+        } catch (TelegramApiException e) {
+            log.error("Error al eliminar webhook - exception={}, message={}", 
+                    e.getClass().getSimpleName(), e.getMessage());
+            return false;
         }
     }
 }

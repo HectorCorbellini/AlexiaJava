@@ -12,13 +12,13 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 /**
- * Implementación del servicio para operaciones de base de datos.
+ * Servicio para operaciones de base de datos.
  * Maneja la lógica de negocio relacionada con la persistencia.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class DatabaseService implements IDatabaseService {
+public class DatabaseService {
 
     private final ConnectionTestRepository connectionTestRepository;
     private final ConnectionTestFactory connectionTestFactory;
@@ -29,7 +29,6 @@ public class DatabaseService implements IDatabaseService {
      * @return ConnectionResultDTO con el resultado de la operación
      * @throws DatabaseConnectionException si hay un error de conexión
      */
-    @Override
     public ConnectionResultDTO testConnection() {
         log.debug("Iniciando prueba de conexión a base de datos");
         

@@ -2,7 +2,7 @@ package com.alexia.usecase;
 
 import com.alexia.dto.ConnectionResultDTO;
 import com.alexia.exception.DatabaseConnectionException;
-import com.alexia.service.IDatabaseService;
+import com.alexia.service.DatabaseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class TestConnectionUseCase {
 
-    private final IDatabaseService databaseService;
+    private final DatabaseService databaseService;
     
     /**
      * Ejecuta la prueba de conexión a la base de datos.

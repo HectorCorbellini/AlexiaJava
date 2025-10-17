@@ -5,22 +5,28 @@ import com.alexia.repository.TelegramMessageRepository;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Vista para mostrar los logs de mensajes de Telegram.
@@ -28,6 +34,8 @@ import java.util.List;
 @Route(value = "telegram-logs", layout = MainLayout.class)
 @PageTitle("Logs de Telegram | Alexia")
 public class TelegramLogsView extends VerticalLayout {
+
+    private static final Logger logger = LoggerFactory.getLogger(TelegramLogsView.class);
 
     private final TelegramMessageRepository telegramMessageRepository;
     private final Grid<TelegramMessage> grid;
@@ -105,6 +113,10 @@ public class TelegramLogsView extends VerticalLayout {
         actions.setWidthFull();
         actions.setJustifyContentMode(JustifyContentMode.END);
 
+        Button deleteButton = new Button("Eliminar Seleccionados", new Icon(VaadinIcon.TRASH));
+        deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        deleteButton.addClickListener(e -> confirmAndDeleteMessages());
+
         Button refreshButton = new Button("Actualizar", new Icon(VaadinIcon.REFRESH));
         refreshButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         refreshButton.addClickListener(e -> {
@@ -112,7 +124,7 @@ public class TelegramLogsView extends VerticalLayout {
             updateStats();
         });
 
-        actions.add(refreshButton);
+        actions.add(deleteButton, refreshButton);
         return actions;
     }
 
@@ -120,6 +132,7 @@ public class TelegramLogsView extends VerticalLayout {
         Grid<TelegramMessage> messageGrid = new Grid<>(TelegramMessage.class, false);
         messageGrid.setSizeFull();
         messageGrid.setPageSize(20);
+        messageGrid.setSelectionMode(Grid.SelectionMode.MULTI);
 
         // Columna de fecha
         messageGrid.addColumn(message -> {
@@ -198,21 +211,9 @@ public class TelegramLogsView extends VerticalLayout {
             LocalDate selectedDate = dateFilter.getValue();
             LocalDateTime startOfDay = selectedDate.atStartOfDay();
             LocalDateTime endOfDay = selectedDate.plusDays(1).atStartOfDay();
-
-            messages = telegramMessageRepository.findAll().stream()
-                    .filter(msg -> msg.getCreatedAt() != null &&
-                            msg.getCreatedAt().isAfter(startOfDay) &&
-                            msg.getCreatedAt().isBefore(endOfDay))
-                    .sorted((m1, m2) -> m2.getCreatedAt().compareTo(m1.getCreatedAt()))
-                    .toList();
+            messages = telegramMessageRepository.findByCreatedAtBetweenOrderByCreatedAtDesc(startOfDay, endOfDay);
         } else {
-            messages = telegramMessageRepository.findAll().stream()
-                    .sorted((m1, m2) -> {
-                        if (m1.getCreatedAt() == null) return 1;
-                        if (m2.getCreatedAt() == null) return -1;
-                        return m2.getCreatedAt().compareTo(m1.getCreatedAt());
-                    })
-                    .toList();
+            messages = telegramMessageRepository.findAllByOrderByCreatedAtDesc();
         }
 
         grid.setItems(messages);
@@ -225,25 +226,93 @@ public class TelegramLogsView extends VerticalLayout {
     }
 
     private void setupAutoRefresh() {
-        // Auto-refresh cada 5 segundos usando un thread simple
-        Thread refreshThread = new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    Thread.sleep(5000); // 5 segundos
-                    UI ui = getUI().orElse(null);
-                    if (ui != null) {
-                        ui.access(() -> {
-                            loadMessages();
-                            updateStats();
-                        });
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
+        // Auto-refresh cada 5 segundos usando el mecanismo de polling de Vaadin
+        getUI().ifPresent(ui -> {
+            ui.setPollInterval(5000);
+            ui.addPollListener(event -> {
+                loadMessages();
+                updateStats();
+            });
         });
-        refreshThread.setDaemon(true);
-        refreshThread.start();
+    }
+
+    /**
+     * Confirma y elimina los mensajes seleccionados.
+     */
+    private void confirmAndDeleteMessages() {
+        Set<TelegramMessage> selectedMessages = grid.getSelectedItems();
+        logger.info("Mensajes seleccionados para eliminar: {}", selectedMessages.size());
+
+        if (selectedMessages.isEmpty()) {
+            showWarning("Por favor, selecciona al menos un mensaje para eliminar");
+            return;
+        }
+
+        ConfirmDialog dialog = createDeleteConfirmationDialog(selectedMessages);
+        dialog.open();
+    }
+
+    /**
+     * Crea el diálogo de confirmación para eliminar mensajes.
+     */
+    private ConfirmDialog createDeleteConfirmationDialog(Set<TelegramMessage> messages) {
+        ConfirmDialog dialog = new ConfirmDialog();
+        dialog.setHeader("Confirmar eliminación");
+        dialog.setText("¿Estás seguro de que deseas eliminar " + messages.size() +
+                " mensaje(s)? Esta acción no se puede deshacer.");
+
+        dialog.setCancelable(true);
+        dialog.setCancelText("Cancelar");
+
+        dialog.setConfirmText("Eliminar");
+        dialog.setConfirmButtonTheme("error primary");
+
+        dialog.addConfirmListener(event -> deleteMessages(messages));
+
+        return dialog;
+    }
+
+    /**
+     * Elimina los mensajes de la base de datos.
+     */
+    private void deleteMessages(Set<TelegramMessage> messages) {
+        try {
+            logger.info("Eliminando {} mensajes de la base de datos", messages.size());
+            telegramMessageRepository.deleteAll(messages);
+
+            showSuccess(messages.size() + " mensaje(s) eliminado(s) correctamente");
+
+            loadMessages();
+            updateStats();
+            grid.deselectAll();
+            logger.info("Mensajes eliminados exitosamente");
+        } catch (Exception ex) {
+            logger.error("Error al eliminar mensajes", ex);
+            showError("Error al eliminar mensajes: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Muestra una notificación de éxito.
+     */
+    private void showSuccess(String message) {
+        Notification notification = Notification.show(message, 3000, Notification.Position.BOTTOM_START);
+        notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+    }
+
+    /**
+     * Muestra una notificación de advertencia.
+     */
+    private void showWarning(String message) {
+        Notification notification = Notification.show(message, 3000, Notification.Position.MIDDLE);
+        notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+    }
+
+    /**
+     * Muestra una notificación de error.
+     */
+    private void showError(String message) {
+        Notification notification = Notification.show(message, 5000, Notification.Position.MIDDLE);
+        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
     }
 }

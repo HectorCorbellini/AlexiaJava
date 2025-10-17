@@ -438,59 +438,6 @@ CREATE INDEX IF NOT EXISTS idx_bot_commands_created_at ON bot_commands(created_a
 **Fecha de completado**: 2025-10-16
 
 ---
-- [ ] Configurar API key de Grok en `.env`
-- [ ] Implementar método `generateResponse(String message)` en GrokService
-- [ ] Modificar `AlexiaTelegramBot` para usar Grok en lugar de eco
-- [ ] Crear tabla `ai_conversations` para guardar historial
-- [ ] Implementar manejo de errores y fallback a eco si falla Grok
-
-**Verificación**:
-```bash
-# En Telegram:
-"¿Qué es la inteligencia artificial?" 
-→ Respuesta inteligente de Grok
-
-"Cuéntame un chiste"
-→ Chiste generado por Grok
-
-"¿Cuál es la capital de Francia?"
-→ "París es la capital de Francia..."
-```
-
-**Archivos a crear/modificar**:
-- `src/main/java/com/alexia/service/GrokService.java`
-- `src/main/java/com/alexia/service/IGrokService.java`
-- `src/main/java/com/alexia/dto/AIRequest.java`
-- `src/main/java/com/alexia/dto/AIResponse.java`
-- `src/main/java/com/alexia/entity/AIConversation.java`
-- `src/main/java/com/alexia/repository/AIConversationRepository.java`
-- Modificar `AlexiaTelegramBot.java`
-- Modificar `pom.xml` (agregar OkHttp)
-- Modificar `.env` (GROK_API_KEY)
-
-**SQL en Supabase**:
-```sql
-CREATE TABLE ai_conversations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    chat_id BIGINT NOT NULL,
-    user_message TEXT NOT NULL,
-    ai_response TEXT NOT NULL,
-    ai_provider VARCHAR(50) DEFAULT 'grok',
-    tokens_used INTEGER,
-    response_time_ms INTEGER,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-```
-
-**Configuración en .env**:
-```bash
-# Grok AI Configuration
-GROK_API_KEY=tu_api_key_de_grok
-GROK_API_URL=https://api.x.ai/v1/chat/completions
-GROK_MODEL=grok-beta
-```
-
----
 
 ### **PASO 7: Dashboard de Conversaciones con IA**
 **Objetivo**: Mostrar en el dashboard las conversaciones con IA y métricas de uso.
@@ -563,16 +510,18 @@ AI_DEFAULT_PROVIDER=grok
 
 ---
 
-### **PASO 9: Búsqueda Simple en Base de Datos**
+### **PASO 9: Búsqueda Simple por Categoría** ✅ COMPLETADO
 **Objetivo**: Crear tabla de negocios y permitir búsqueda básica por categoría.
 
+**Fecha de completado**: 2025-10-16
+
 **Tareas**:
-- [ ] Crear tabla `businesses` en Supabase (versión simplificada)
-- [ ] Crear entidad `Business.java`
-- [ ] Crear repositorio `BusinessRepository.java`
-- [ ] Agregar algunos negocios de prueba manualmente en Supabase
-- [ ] Implementar búsqueda: "buscar [categoría]" en Telegram
-- [ ] Responder con lista de negocios encontrados
+- [x] Crear tabla `businesses` en Supabase (versión simplificada)
+- [x] Crear entidad `Business.java`
+- [x] Crear repositorio `BusinessRepository.java`
+- [x] Agregar algunos negocios de prueba manualmente en Supabase
+- [x] Implementar búsqueda: "buscar [categoría]" en Telegram
+- [x] Responder con lista de negocios encontrados
 
 **Verificación**:
 ```bash
@@ -588,123 +537,32 @@ AI_DEFAULT_PROVIDER=grok
 - `src/main/java/com/alexia/service/BusinessService.java`
 - Modificar `AlexiaTelegramBot.java`
 
-**SQL en Supabase**:
+**SQL en Supabase**: ✅ Implementado en `database/09_create_businesses_table.sql`
+
 ```sql
-CREATE TABLE businesses (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+-- Tabla con índices optimizados
+CREATE TABLE IF NOT EXISTS businesses (
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     category VARCHAR(100),
     address VARCHAR(500),
     phone VARCHAR(50),
     is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Insertar datos de prueba
+-- Índices para búsquedas rápidas
+CREATE INDEX IF NOT EXISTS idx_businesses_category ON businesses(category);
+CREATE INDEX IF NOT EXISTS idx_businesses_is_active ON businesses(is_active);
+CREATE INDEX IF NOT EXISTS idx_businesses_name ON businesses(name);
+
+-- 12 negocios de prueba en 5 categorías
+-- (Ver archivo completo para todos los datos de prueba)
 INSERT INTO businesses (name, category, address, phone) VALUES
 ('Panadería El Sol', 'panadería', 'Calle 123, Costa Azul', '555-0001'),
 ('Pan Caliente', 'panadería', 'Av. Principal 456', '555-0002'),
 ('Restaurante La Costa', 'restaurante', 'Playa Norte 789', '555-0003');
-```
-
----
-
-### **PASO 7: CRUD de Negocios en Dashboard**
-**Objetivo**: Permitir crear, editar y eliminar negocios desde el panel web.
-
-**Tareas**:
-- [ ] Crear vista `BusinessView.java` con Grid de negocios
-- [ ] Crear formulario para agregar/editar negocios
-- [ ] Implementar botones: Nuevo, Editar, Eliminar
-- [ ] Agregar validaciones básicas
-- [ ] Actualizar menú lateral con opción "Negocios"
-
-**Verificación**:
-```bash
-# En el dashboard:
-# Ir a "Negocios"
-# Hacer clic en "Nuevo"
-# Llenar formulario y guardar
-# Verificar que aparece en la lista
-# Desde Telegram buscar el negocio creado
-```
-
-**Archivos a crear/modificar**:
-- `src/main/java/com/alexia/views/BusinessView.java`
-- `src/main/java/com/alexia/views/BusinessForm.java`
-- Modificar `MainLayout.java`
-
----
-
-### **PASO 8: Integración con IA (Grok)**
-**Objetivo**: Usar Grok para analizar la intención del usuario.
-
-**Tareas**:
-- [ ] Agregar dependencia HTTP client al `pom.xml`
-- [ ] Crear clase `GrokService.java`
-- [ ] Implementar llamada a API de Grok
-- [ ] Extraer categoría del mensaje del usuario usando IA
-- [ ] Usar la categoría extraída para buscar negocios
-- [ ] Registrar consultas IA en tabla `ai_queries`
-
-**Verificación**:
-```bash
-# En Telegram:
-"Necesito comprar pan" → Grok extrae "panadería" → Muestra panaderías
-"Dónde puedo comer?" → Grok extrae "restaurante" → Muestra restaurantes
-```
-
-**Archivos a crear/modificar**:
-- `src/main/java/com/alexia/service/GrokService.java`
-- `src/main/java/com/alexia/entity/AIQuery.java`
-- `src/main/java/com/alexia/repository/AIQueryRepository.java`
-- Modificar `AlexiaTelegramBot.java`
-
-**SQL en Supabase**:
-```sql
-CREATE TABLE ai_queries (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_message TEXT,
-    extracted_category VARCHAR(100),
-    ai_response TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-```
-
----
-
-### **PASO 9: Búsqueda por Ubicación**
-**Objetivo**: Permitir que el usuario comparta su ubicación y buscar negocios cercanos.
-
-**Tareas**:
-- [ ] Agregar columnas de ubicación a tabla `businesses`
-- [ ] Modificar entidad `Business.java` con latitud/longitud
-- [ ] Capturar ubicación compartida en Telegram
-- [ ] Implementar búsqueda por distancia (PostGIS)
-- [ ] Responder con negocios ordenados por cercanía
-
-**Verificación**:
-```bash
-# En Telegram:
-# Compartir ubicación
-# Escribir: "panaderías cerca"
-# Debe responder con negocios ordenados por distancia
-```
-
-**Archivos a crear/modificar**:
-- Modificar `Business.java`
-- Modificar `BusinessRepository.java`
-- Modificar `AlexiaTelegramBot.java`
-- Modificar `BusinessService.java`
-
-**SQL en Supabase**:
-```sql
-ALTER TABLE businesses 
-ADD COLUMN latitude DECIMAL(10, 8),
-ADD COLUMN longitude DECIMAL(11, 8);
-
--- Actualizar datos de prueba con coordenadas
-UPDATE businesses SET latitude = 10.3910, longitude = -75.4794 WHERE name = 'Panadería El Sol';
 ```
 
 ---
@@ -807,20 +665,44 @@ Cada paso se considera **COMPLETADO** solo si:
 
 ## 🚀 Pasos Futuros (Después del Paso 10)
 
-Una vez completados los 10 pasos básicos, se pueden agregar:
-- Integración con Google Places (fallback)
-- Sistema de campañas y tracking
+Una vez completados los 10 pasos básicos de la **Fase 1: Fundación**, el proyecto continuará con fases adicionales que transformarán Alexia en una plataforma comercial completa.
+
+**Ver roadmap completo en**: `PASOS_FUTUROS.md`
+
+### Resumen de Fases Futuras:
+
+**Fase 2: Búsqueda y Negocios (Pasos 11-15)**
+- CRUD completo de negocios y productos
+- Integración con Google Maps Places API
+- Búsqueda geográfica con PostGIS
+- Sistema de búsqueda híbrida inteligente
+
+**Fase 3: Comercialización (Pasos 16-20)**
+- Sistema de campañas CPC/CPA
+- Tracking de eventos y conversiones
+- Integración con Mercado Pago
 - Facturación automática
-- Integración con WhatsApp
-- Autenticación y roles en dashboard
-- Sistema de productos
-- Notificaciones push
-- Reportes avanzados
+- Sistema de leads y conversiones
+
+**Fase 4: Integración Avanzada (Pasos 21-25)**
+- Integración con WhatsApp Business API
+- Sincronización con HighLevel CRM
+- Sistema de roles y permisos
+- API REST pública
+- Sistema de notificaciones multi-canal
+
+**Fase 5: Escalabilidad (Pasos 26-30)**
+- Internacionalización (i18n)
+- Analytics avanzado con ML
+- Sistema de recomendaciones
+- App móvil nativa
+- Marketplace de servicios
 
 ---
 
 **Versión**: 1.0  
 **Fecha de creación**: 2025-10-14  
 **Última actualización**: 2025-10-16  
-**Progreso**: 6 pasos de 10 pasos = **60% completado** - Comandos Básicos del Bot funcionando  
-**Próximo paso**: Paso 7 - Dashboard de Conversaciones IA
+**Progreso**: 6 pasos de 10 pasos = **60% completado** (Fase 1: Fundación)  
+**Próximo paso**: Paso 7 - Dashboard de Conversaciones IA  
+**Roadmap completo**: Ver `PASOS_FUTUROS.md` para detalles de Pasos 11-30

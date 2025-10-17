@@ -3,7 +3,6 @@ package com.alexia.service;
 import com.alexia.dto.TelegramMessageDTO;
 import com.alexia.entity.TelegramMessage;
 import com.alexia.exception.TelegramException;
-import com.alexia.factory.TelegramMessageFactory;
 import com.alexia.repository.TelegramMessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,20 +10,20 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Implementación del servicio para gestionar mensajes de Telegram.
+ * Servicio para gestionar mensajes de Telegram.
  * Maneja la lógica de negocio relacionada con la persistencia de mensajes.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TelegramService implements ITelegramService {
+public class TelegramService {
 
     private final TelegramMessageRepository telegramMessageRepository;
-    private final TelegramMessageFactory telegramMessageFactory;
 
     /**
      * Guarda un mensaje de Telegram en la base de datos.
@@ -33,15 +32,22 @@ public class TelegramService implements ITelegramService {
      * @return El mensaje guardado
      * @throws TelegramException si hay un error al guardar
      */
-    @Override
     @Transactional
     public TelegramMessage saveMessage(TelegramMessageDTO dto) {
         log.debug("Guardando mensaje de Telegram - chatId={}, userName={}", 
                 dto.getChatId(), dto.getUserName());
         
         try {
-            // Usar factory para crear la entidad desde el DTO
-            TelegramMessage message = telegramMessageFactory.createFromDTO(dto);
+            // Crear entidad directamente desde el DTO
+            TelegramMessage message = TelegramMessage.builder()
+                    .chatId(dto.getChatId())
+                    .userName(dto.getUserName())
+                    .firstName(dto.getFirstName())
+                    .lastName(dto.getLastName())
+                    .messageText(dto.getMessageText())
+                    .botResponse(dto.getBotResponse())
+                    .createdAt(LocalDateTime.now())
+                    .build();
             
             TelegramMessage saved = telegramMessageRepository.save(message);
             
@@ -67,11 +73,10 @@ public class TelegramService implements ITelegramService {
      * @param chatId ID del chat
      * @return Lista de mensajes
      */
-    @Override
     public List<TelegramMessageDTO> getMessagesByChatId(Long chatId) {
         return telegramMessageRepository.findByChatIdOrderByCreatedAtDesc(chatId)
                 .stream()
-                .map(telegramMessageFactory::createDTO)
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
@@ -80,11 +85,10 @@ public class TelegramService implements ITelegramService {
      *
      * @return Lista de todos los mensajes
      */
-    @Override
     public List<TelegramMessageDTO> getAllMessages() {
         return telegramMessageRepository.findAll()
                 .stream()
-                .map(telegramMessageFactory::createDTO)
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
@@ -93,8 +97,24 @@ public class TelegramService implements ITelegramService {
      *
      * @return Número total de mensajes
      */
-    @Override
     public long getTotalMessageCount() {
         return telegramMessageRepository.count();
+    }
+    
+    /**
+     * Convierte una entidad TelegramMessage a DTO.
+     *
+     * @param message Entidad a convertir
+     * @return DTO con los datos del mensaje
+     */
+    private TelegramMessageDTO convertToDTO(TelegramMessage message) {
+        return TelegramMessageDTO.builder()
+                .chatId(message.getChatId())
+                .userName(message.getUserName())
+                .firstName(message.getFirstName())
+                .lastName(message.getLastName())
+                .messageText(message.getMessageText())
+                .botResponse(message.getBotResponse())
+                .build();
     }
 }

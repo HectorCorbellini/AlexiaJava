@@ -3,6 +3,7 @@ package com.alexia.views;
 import com.alexia.constants.Messages;
 import com.alexia.constants.UIConstants;
 import com.alexia.repository.TelegramMessageRepository;
+import com.alexia.service.BotManagerService;
 import com.alexia.usecase.TestConnectionUseCase;
 import com.alexia.views.components.MetricCard;
 import com.alexia.views.components.SystemStatusPanel;
@@ -18,11 +19,14 @@ import com.vaadin.flow.router.Route;
 public class DashboardView extends VerticalLayout {
 
     private final TestConnectionUseCase testConnectionUseCase;
+    private final BotManagerService botManagerService;
     private final TelegramMessageRepository telegramMessageRepository;
 
-    public DashboardView(TestConnectionUseCase testConnectionUseCase, 
+    public DashboardView(TestConnectionUseCase testConnectionUseCase,
+                        BotManagerService botManagerService,
                         TelegramMessageRepository telegramMessageRepository) {
         this.testConnectionUseCase = testConnectionUseCase;
+        this.botManagerService = botManagerService;
         this.telegramMessageRepository = telegramMessageRepository;
         
         setSizeFull();
@@ -70,7 +74,7 @@ public class DashboardView extends VerticalLayout {
         add(metricsRow2);
 
         // Panel de estado del sistema
-        SystemStatusPanel systemStatus = new SystemStatusPanel(testConnectionUseCase);
+        SystemStatusPanel systemStatus = new SystemStatusPanel(testConnectionUseCase, botManagerService);
         add(systemStatus);
 
         // Actividad reciente

@@ -2,13 +2,15 @@
 
 Este documento contiene las instrucciones para crear todas las tablas necesarias en Supabase para el proyecto Alexia.
 
+**Última actualización**: 2025-10-16  
+**Estado del proyecto**: 6/10 pasos completados (60%)  
+**Características actuales**: Bot con IA (Grok AI) + Dashboard profesional
+
 ## 🔧 Instrucciones Generales
 
 1. **Accede a Supabase**: https://supabase.com
 2. **Abre el SQL Editor** en tu proyecto
 3. **Ejecuta los scripts** en el orden indicado
-
----
 
 ## 📦 Paso 2: Tabla de Prueba de Conexión
 
@@ -28,7 +30,7 @@ CREATE TABLE IF NOT EXISTS connection_test (
 
 ## 📱 Paso 3: Tabla de Mensajes de Telegram
 
-**Archivo**: `step3_telegram_messages.sql`
+** Archivo**: `step3_telegram_messages.sql`
 
 ```sql
 CREATE TABLE IF NOT EXISTS telegram_messages (
@@ -43,13 +45,13 @@ CREATE TABLE IF NOT EXISTS telegram_messages (
 );
 ```
 
-**Propósito**: Almacenar todos los mensajes recibidos y enviados por el bot de Telegram.
+**Propósito**: Almacenar todos los mensajes recibidos y respuestas del bot con IA.
 
 ---
 
 ## 🤖 Paso 5: Tabla de Comandos del Bot
 
-**Archivo**: `step5_bot_commands.sql`
+** Archivo**: `step5_bot_commands.sql`
 
 ```sql
 CREATE TABLE IF NOT EXISTS bot_commands (
@@ -102,7 +104,7 @@ Una vez que todas las tablas estén creadas y la aplicación ejecutándose, podr
 ```
 ¡Bienvenido a Alexia! 🤖
 
-Soy tu asistente automatizado para encontrar negocios, productos y servicios locales.
+Soy tu asistente automatizado con inteligencia artificial para encontrar Negocios, productos y servicios locales.
 
 Usa /help para ver los comandos disponibles.
 ```
@@ -134,7 +136,7 @@ También puedes enviarme cualquier mensaje y te responderé con eco.
 
 1. ✅ **Paso 2**: `step2_connection_test.sql` - Tabla de prueba
 2. ✅ **Paso 3**: `step3_telegram_messages.sql` - Mensajes de Telegram
-3. ⏳ **Paso 5**: `step5_bot_commands.sql` - Comandos del bot (NUEVO)
+3. ✅ **Paso 5**: `step5_bot_commands.sql` - Comandos del bot
 
 ---
 
@@ -148,10 +150,11 @@ GROUP BY command
 ORDER BY total DESC;
 ```
 
-### Ver mensajes recientes
+### Ver mensajes recientes con respuestas de IA
 ```sql
-SELECT chat_id, user_name, message_text, created_at
+SELECT chat_id, user_name, message_text, bot_response, created_at
 FROM telegram_messages
+WHERE bot_response IS NOT NULL
 ORDER BY created_at DESC
 LIMIT 10;
 ```
@@ -164,3 +167,38 @@ WHERE user_name IS NOT NULL
 GROUP BY user_name, command
 ORDER BY total DESC;
 ```
+
+### Estadísticas de uso de IA
+```sql
+-- Mensajes que recibieron respuesta de IA vs eco
+SELECT
+    COUNT(CASE WHEN bot_response NOT LIKE 'Recibí tu mensaje:%' THEN 1 END) as respuestas_ia,
+    COUNT(CASE WHEN bot_response LIKE 'Recibí tu mensaje:%' THEN 1 END) as respuestas_eco,
+    COUNT(*) as total_mensajes
+FROM telegram_messages;
+
+---
+
+## 📈 Progreso del Proyecto
+
+| Paso | Estado | Fecha | Descripción |
+|------|--------|-------|-------------|
+| 1 | ✅ | 2025-10-14 | Proyecto Base y Dashboard Básico |
+| 2 | ✅ | 2025-10-14 | Conexión a Supabase |
+| UI | ✅ | 2025-10-14 | Dashboard Profesional Completo |
+| 3 | ✅ | 2025-10-14 | Integración con Telegram |
+| 4 | ✅ | 2025-10-16 | Dashboard con Logs de Telegram |
+| 5 | ✅ | 2025-10-16 | Comandos Básicos del Bot |
+| 6 | ✅ | 2025-10-16 | **Integración con Grok AI** ← **NUEVO** |
+| 7 | ⏳ | Próximo | Dashboard de Conversaciones IA |
+| 8 | ⏳ | Próximo | Integración con OpenAI (opcional) |
+| 9 | ⏳ | Próximo | Búsqueda por categoría |
+| 10 | ⏳ | Próximo | Dashboard con métricas |
+
+**Progreso actual**: 6/10 pasos = **60% completado** 🎉
+
+---
+
+**Estado**: ✅ Completado hasta Paso 6  
+**Última actualización**: 2025-10-16  
+**Siguientes pasos**: Dashboard de conversaciones IA

@@ -2,6 +2,7 @@ package com.alexia.views.components;
 
 import com.alexia.constants.Messages;
 import com.alexia.dto.ConnectionResultDTO;
+import com.alexia.service.BotManagerService;
 import com.alexia.usecase.TestConnectionUseCase;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -24,6 +25,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 public class SystemStatusPanel extends VerticalLayout {
     
     private final TestConnectionUseCase testConnectionUseCase;
+    private final BotManagerService botManagerService;
     private final StatusBadge supabaseBadge;
     private final StatusBadge telegramBadge;
     private final StatusBadge whatsappBadge;
@@ -35,9 +37,12 @@ public class SystemStatusPanel extends VerticalLayout {
      * Constructor para crear el panel de estado del sistema.
      * 
      * @param testConnectionUseCase Caso de uso para probar la conexión
+     * @param botManagerService Servicio para gestionar el estado del bot
      */
-    public SystemStatusPanel(TestConnectionUseCase testConnectionUseCase) {
+    public SystemStatusPanel(TestConnectionUseCase testConnectionUseCase, 
+                            BotManagerService botManagerService) {
         this.testConnectionUseCase = testConnectionUseCase;
+        this.botManagerService = botManagerService;
         
         setSpacing(true);
         setPadding(true);
@@ -55,8 +60,11 @@ public class SystemStatusPanel extends VerticalLayout {
         statusRow.setWidthFull();
         statusRow.setSpacing(true);
         
+        // Consultar estado real de los servicios
+        boolean isTelegramRunning = botManagerService.isBotRunning();
+        
         supabaseBadge = new StatusBadge("Supabase", true);
-        telegramBadge = new StatusBadge("Telegram", false);
+        telegramBadge = new StatusBadge("Telegram", isTelegramRunning);
         whatsappBadge = new StatusBadge("WhatsApp", false);
         aiBadge = new StatusBadge("OpenAI/Grok", false);
         googlePlacesBadge = new StatusBadge("Google Places", false);

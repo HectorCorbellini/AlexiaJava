@@ -2,7 +2,6 @@ package com.alexia.service;
 
 import com.alexia.dto.TelegramMessageDTO;
 import com.alexia.entity.TelegramMessage;
-import com.alexia.factory.TelegramMessageFactory;
 import com.alexia.repository.TelegramMessageRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,9 +23,6 @@ class TelegramServiceTest {
 
     @Mock
     private TelegramMessageRepository repository;
-
-    @Mock
-    private TelegramMessageFactory factory;
 
     @InjectMocks
     private TelegramService service;
@@ -57,7 +53,6 @@ class TelegramServiceTest {
     @Test
     void shouldSaveMessageSuccessfully() {
         // Given
-        when(factory.createFromDTO(testDTO)).thenReturn(testEntity);
         when(repository.save(any(TelegramMessage.class))).thenReturn(testEntity);
 
         // When
@@ -67,7 +62,6 @@ class TelegramServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getChatId()).isEqualTo(12345L);
         assertThat(result.getMessageText()).isEqualTo("Hello Bot");
-        verify(factory, times(1)).createFromDTO(testDTO);
         verify(repository, times(1)).save(any(TelegramMessage.class));
     }
 

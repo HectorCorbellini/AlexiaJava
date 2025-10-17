@@ -2,6 +2,7 @@ package com.alexia.config;
 
 import com.alexia.repository.BotCommandRepository;
 import com.alexia.repository.TelegramMessageRepository;
+import com.alexia.service.BusinessService;
 import com.alexia.service.GrokService;
 import com.alexia.service.TelegramService;
 import com.alexia.telegram.AlexiaTelegramBot;
@@ -10,13 +11,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.telegram.telegrambots.meta.TelegramBotsApi;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 /**
  * Configuración del bot de Telegram.
- * Inicializa y registra el bot en la API de Telegram.
+ * Crea la instancia del bot pero NO lo registra automáticamente.
+ * El registro se realiza manualmente a través de BotManagerService.
  */
 @Configuration
 @RequiredArgsConstructor
@@ -33,30 +32,20 @@ public class TelegramBotConfig {
     private final BotCommandRepository botCommandRepository;
     private final TelegramMessageRepository telegramMessageRepository;
     private final GrokService grokService;
+    private final BusinessService businessService;
 
+    /**
+     * Crea la instancia del bot de Telegram.
+     * El bot NO se inicia automáticamente - debe ser iniciado manualmente desde el dashboard.
+     * 
+     * @return instancia configurada de AlexiaTelegramBot
+     */
     @Bean
     public AlexiaTelegramBot alexiaTelegramBot() {
+        log.info("Creando instancia del bot de Telegram - username=@{}", botUsername);
+        log.info("ℹ️  El bot NO se iniciará automáticamente. Usa el dashboard para iniciarlo.");
+        
         return new AlexiaTelegramBot(botToken, botUsername, telegramService, 
-                botCommandRepository, telegramMessageRepository, grokService);
-    }
-
-    @Bean
-    public TelegramBotsApi telegramBotsApi(AlexiaTelegramBot alexiaTelegramBot) throws TelegramApiException {
-        try {
-            TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-            
-            // Registrar el bot
-            botsApi.registerBot(alexiaTelegramBot);
-            
-            log.info("Bot de Telegram registrado exitosamente - username=@{}", 
-                    alexiaTelegramBot.getBotUsername());
-            
-            return botsApi;
-        } catch (TelegramApiException e) {
-            log.error("Error al registrar bot de Telegram - exception={}, message={}", 
-                    e.getClass().getSimpleName(), e.getMessage());
-            log.error("Verifica que el token sea válido y que no haya un webhook configurado");
-            throw new RuntimeException("No se pudo inicializar el bot de Telegram", e);
-        }
+                botCommandRepository, telegramMessageRepository, grokService, businessService);
     }
 }
